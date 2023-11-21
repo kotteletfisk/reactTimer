@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 
 function Timer() {
-  const [initTime, setInitTime] = useState(0); // 10 minutes
-  const [time, setTime] = useState(initTime); // 10 minutes
+  const [initTime, setInitTime] = useState(0);
+  const [time, setTime] = useState(initTime); 
   const [isActive, setIsActive] = useState(false);
+  const [isTimeUp, setIsTimeUp] = useState(false); 
   const [inputMinutes, setInputMinutes] = useState(0);
   const [inputSeconds, setInputSeconds] = useState(0);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     let intervalID;
@@ -16,28 +18,28 @@ function Timer() {
           console.error("Error playing audio:", error);
         });
       }
-      alert("Time is up!");
-      setIsActive(false);
     };
 
     if (isActive) {
       intervalID = setInterval(() => {
-        setTime((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
+        if (!isTimeUp) setTime((prevTime) => (prevTime > 0 ? prevTime - 1 : 0));
+        else handleTimeUp();
       }, 1000);
 
       if (time < 1) {
-        handleTimeUp;
+        setIsTimeUp(true);
       }
     }
     return () => {
       clearInterval(intervalID);
     };
-  }, [isActive, time]);
+  }, [isActive, time, isTimeUp]);
 
   function updateTime(time) {
-    setTime(time * 60);
-    setInitTime(time * 60);
+    setTime(Math.floor(time * 60));
+    setInitTime(Math.floor(time * 60));
     setIsActive(false);
+    setIsTimeUp(false);
   }
 
   function handleInputChange(event) {
@@ -59,7 +61,6 @@ function Timer() {
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
 
-  //    TODO: make reset, add init value
   return (
     <div className="timer">
       <Clock seconds={seconds} minutes={minutes} />
@@ -97,6 +98,7 @@ function Timer() {
                     id="inputSeconds"
                     type="number"
                     min={0}
+                    max={59}
                     value={inputSeconds}
                     onChange={handleInputChange}
                   />
@@ -108,9 +110,9 @@ function Timer() {
         <br />
         <button type="submit">Set</button>
       </form>
-      {/* <audio controls ref={audioRef}>
-        <source src="/assets/alarm.wav" type="audio/wav" />
-      </audio> */}
+      <audio ref={audioRef}>
+        <source src="alarm.wav" type="audio/wav" />
+      </audio>
     </div>
   );
 }
